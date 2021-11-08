@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 # coding:utf-8
 
+from ast import With
 from binascii import b2a_hex
 from struct import pack, unpack, calcsize
 import json
 from serial import Serial
 import argparse
 from socket import socket, AF_INET, SOCK_DGRAM
+import csv
 
 
 def serial_write_init(port,baudrate):
@@ -65,6 +67,7 @@ def get_serial(ser,s,ip_addr,desc):
             # print(data[1])
             # print(data[2])
             data_json = {member_desc["name"]: dict(zip(keys, data))}
+            fcsvs[member_desc["name"]].write((",".join(['{}']*len(data))+'\n').format(*data))
             str_json = json.dumps(data_json)
             print(str_json)
             s.sendto(str_json.encode("utf-8"), ip_addr)
@@ -77,8 +80,14 @@ def get_json():
     f.close()
     data = desc["msgs"][0]["members"]
     print(data)
-
     return f,desc
+
+#输出CVS文件
+def get_csv():
+    names = [i["name"] for i in desc["msgs"]]
+    csvs = [open(i["name"]+'.csv', "w",encoding="utf-8") for i in desc["msgs"]]
+    fcsvs = dict(zip(names,csvs))
+    return fcsvs
 
 
 if __name__ == "__main__":
@@ -88,6 +97,20 @@ if __name__ == "__main__":
     ip_addr = ("127.0.0.1", 9870)
     f,desc = get_json()
 
-    while True:
-        get_serial(ser,s,ip_addr,desc)
+    fcsvs = get_csv()
+
+    for i in desc["msgs"]:
+        mkeys = i["members"].keys()
+        sformat = (",".join(['{}']*len(mkeys))) + '\n'
+        fcsvs[i["name"]].write(sformat.format(*mkeys))
+
+
+    try:
+        while True:
+            get_serial(ser,s,ip_addr,desc)
+    except:
+        print('\n')
+        for k in fcsvs.items():
+            k[1].close()
+            print("close file {}.csv".format(k[0]))
     
