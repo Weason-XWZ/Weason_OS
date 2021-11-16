@@ -25,15 +25,15 @@ while True:
     y = cos(timestamp)
     z = (timestamp/(2*pi) - int(timestamp/(2*pi)))*2*pi
     id = 0
-    payload = pack("<dfff", timestamp, x, y,z)
+    payload = pack("<fff", x, y,z)
     id_raw = pack("<H", id)
     payload_len_raw = pack("<H", len(payload))
     pack_raw = header+id_raw+payload_len_raw+payload+tailer
     ser.write(pack_raw)
     sleep(0.01)
-    id_raw = pack("<H", 1)
-    payload_len_raw = pack("<H", calcsize("<dff"))
-    payload = pack("<dff", timestamp,x,y)
-    pack_raw = header+id_raw+payload_len_raw+payload+tailer
-    ser.write(pack_raw)
-    sleep(0.01)
+    # id_raw = pack("<H", 1)
+    # payload_len_raw = pack("<H", calcsize("<dff"))
+    # payload = pack("<dff", timestamp,x,y)
+    # pack_raw = header+id_raw+payload_len_raw+payload+tailer
+    # ser.write(pack_raw)
+    # sleep(0.01)
