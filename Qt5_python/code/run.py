@@ -3,24 +3,34 @@
 import aliLink,mqttd,rpi
 import time,json
 
+state_car = 0
+
+def get_state_car():
+    return state_car
+
+def set_state_car(data):
+    state_car = data
+
+
 
 # 三元素（iot后台获取）
-ProductKey = 'a1Wb3NoSU9z'
-DeviceName = 'raspberrypi4-00001'
-DeviceSecret = "COBaCsHdd1yfA1mHkkwOAM7krXUwmezU"
+ProductKey = 'gkt3LDoidbE'
+DeviceName = 'pi4bMqtt'
+DeviceSecret = "b7f73d8f513c7886a3693dc3685fffd0"
 # topic (iot后台获取)
-POST = '/sys/a1Wb3NoSU9z/raspberrypi4-00001/thing/event/property/post'  # 上报消息到云
-POST_REPLY = '/sys/a1Wb3NoSU9z/raspberrypi4-00001/thing/event/property/post_reply'  
-SET = '/sys/a1Wb3NoSU9z/raspberrypi4-00001/thing/service/property/set'  # 订阅云端指令
+POST = '/sys/gkt3LDoidbE/pi4bMqtt/thing/event/property/post'  # 上报消息到云
+POST_REPLY = '/sys/gkt3LDoidbE/pi4bMqtt/thing/event/property/post_reply'  
+SET = '/sys/gkt3LDoidbE/pi4bMqtt/thing/service/property/set'  # 订阅云端指令
 
 
 # 消息回调（云端下发消息的回调函数）
 def on_message(client, userdata, msg):
-    #print(msg.payload)
+    print(msg.payload)
     Msg = json.loads(msg.payload)
-    switch = Msg['params']['PowerLed']
-    rpi.powerLed(switch)
-    print(msg.payload)  # 开关值
+    data = Msg['params']['car_state']
+    set_state_car(data)
+    
+
 
 #连接回调（与阿里云建立链接后的回调函数）
 def on_connect(client, userdata, flags, rc):
@@ -39,13 +49,7 @@ mqtt.begin(on_message,on_connect)
 
 # 信息获取上报，每10秒钟上报一次系统参数
 while True:
-    time.sleep(10)
-	#获取指示灯状态
-	power_stats=int(rpi.getLed())
-	if(power_stats==0):
-		power_LED = 0
-	else:
-		power_LED = 1
+    time.sleep(1)
 
     # CPU 信息
     CPU_temp = float(rpi.getCPUtemperature())  # 温度   ℃
@@ -57,11 +61,13 @@ while True:
     RAM_used =round(int(RAM_stats[1]) /1000,1)
     RAM_free =round(int(RAM_stats[2]) /1000,1)
  
-    # Disk 信息
+    # Disk 信息yt
     DISK_stats =rpi.getDiskSpace()
     DISK_total = float(DISK_stats[0][:-1])
     DISK_used = float(DISK_stats[1][:-1])
     DISK_perc = float(DISK_stats[3][:-1])
+
+    #汽车启动状态
 
     # 构建与云端模型一致的消息结构
     updateMsn = {
@@ -73,9 +79,9 @@ while True:
         'DISK_total':DISK_total,
         'DISK_used_space':DISK_used,
         'DISK_used_percentage':DISK_perc,
-        'PowerLed':power_LED
+        'car_state':state_car
     }
     JsonUpdataMsn = aliLink.Alink(updateMsn)
-    print(JsonUpdataMsn)
+    # print(JsonUpdataMsn)
 
     mqtt.push(POST,JsonUpdataMsn) # 定时向阿里云IOT推送我们构建好的Alink协议数据
