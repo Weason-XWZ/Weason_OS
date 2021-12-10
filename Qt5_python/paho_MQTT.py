@@ -1,50 +1,51 @@
 import paho.mqtt.client as mqtt
-import time
-import datetime
+import hmac,time
 
-# 定义回调
-def on_connect(client, userdata, flags, rc):
-    print("Connection returned " + str(rc))
-    client.subscribe("$SYS/#")
 
+# {
+#   "ProductKey": "gkt3LDoidbE",
+#   "DeviceName": "PcgetHot",
+#   "DeviceSecret": "e53c52e954a87bcf10efd26bcf20bfeb"
+# }
+
+ProductKey = 'gkt3LDoidbE'
+DeviceName = 'PcgetHot'
+DeviceSecret = "e53c52e954a87bcf10efd26bcf20bfeb"
+
+# topic (iot后台获取)
+POST = '/sys/gkt3LDoidbE/pi4bMqtt/thing/event/property/post'  # 上报消息到云
+POST_REPLY = '/sys/gkt3LDoidbE/pi4bMqtt/thing/event/property/post_reply'  
+SET = '/sys/gkt3LDoidbE/pi4bMqtt/thing/service/property/set'  # 订阅云端指令
+
+def linkiot(DeviceName,ProductKey,DeviceSecret,server = 'iot-as-mqtt.cn-shanghai.aliyuncs.com'):
+    serverUrl = server
+    ClientIdSuffix = "|securemode=3,signmethod=hmacsha256,timestamp="
+
+    # 拼合
+    Times = str(int(time.time()))  # 获取登录时间戳
+    Server = ProductKey+'.'+serverUrl    # 服务器地址
+    ClientId = DeviceName + ClientIdSuffix + Times +'|'  # ClientId
+    userNmae = DeviceName + "&" + ProductKey
+    PasswdClear = "clientId" + DeviceName + "deviceName" + DeviceName +"productKey"+ProductKey + "timestamp" + Times  # 明文密码
+
+    # 加密
+    h = hmac.new(bytes(DeviceSecret,encoding= 'UTF-8'),digestmod=hashlib.sha256)  # 使用密钥
+    h.update(bytes(PasswdClear,encoding = 'UTF-8'))
+    Passwd = h.hexdigest()
+    return Server,ClientId,userNmae,Passwd
+
+# 消息回调（云端下发消息的回调函数）
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
+    print(msg.payload)
+    Msg = json.loads(msg.payload)
+    data = Msg['params']['car_state']    
 
 
-def on_publish(msg, rc):   # 成功发布消息的操作
-    if rc == 0:
-        print("publish success, msg = " + msg)
- 
-def on_connect(client, userdata, flags, rc):   # 连接后的操作 0为成功
-    print("Connection returned " + str(rc))
-
+#连接回调（与阿里云建立链接后的回调函数）
+def on_connect(client, userdata, flags, rc):
+    pass
 
 if __name__ == "__main__":
-# 服务端
-   client_id = time.strftime('%Y%m%d%H%M%S',time.localtime(time.time()))
-   client =  mqtt.Client(client_id)
-   client.username_pw_set("用户名","密码")
-   client.on_connect = on_connect
-   client.on_message = on_message
-   client.connect("连接地址", 1883, 60)
-   client.loop_forever()
-
-# # 客户端
-
-# client_id = time.strftime('%Y%m%d%H%M%S',time.localtime(time.time()))
-# client = mqtt.Client(client_id)    # ClientId不能重复，所以使用当前时间
-# client.username_pw_set("用户名", "密码")  # 设置用户名，密码
-# client.connect("链接地址", "1833", 60)  # 连接服务 keepalive=60
-# client.on_connect = on_connect  # 连接后的操作
-# client.loop_start()
-# time.sleep(2)
-# count = 0
- 
-# while count < 5:  # 发布五条消息
-#     count = count + 1
-#     msg = str(datetime.datetime.now())
-#     rc, mid = client.publish("发布消息的主题", payload=msg, qos=1)  # qos
-#     on_publish(msg, rc)
-
-
-
+    Server,ClientId,userNmae,Password = linkiot(DeviceName,ProductKey,DeviceSecret)
+    ali_mqtt = mqtt.Mqtt(Server,ClientId,userNmae,Password)
+    mqtt.subscribe(SET) # 订阅服务器下发消息topic

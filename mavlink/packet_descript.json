@@ -1,0 +1,30 @@
+{
+    "msgs": [
+        {
+            "name": "vector3f",
+            "id":0,
+            "pack_format": "<ddddddddd",
+            "members": {
+                "led": 0,
+                "incflags": 1,
+                "cmpflags": 2,
+                "seq": 3,
+                "sysid": 4,
+                "compid": 5,
+                "msgid": 6,
+                "payloag": 7
+            }
+        },
+        {
+            "name": "vector2f",
+            "id":1,
+            "pack_format": "<fff",
+            "members": {
+                "timestamp": 0,
+                "x": 0,
+                "y": 1,
+                "z": 2
+            }
+        }
+    ]
+}
