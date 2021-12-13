@@ -6,13 +6,10 @@
             "pack_format": "<ddddddddd",
             "members": {
                 "led": 0,
-                "incflags": 1,
-                "cmpflags": 2,
-                "seq": 3,
-                "sysid": 4,
-                "compid": 5,
-                "msgid": 6,
-                "payloag": 7
+                "i_c_s_s_c_data":1,
+                "msgid": 2,
+                "can_id":3,
+                "payloag": 4
             }
         },
         {
