@@ -25,9 +25,9 @@ def get_serial_str(ser):
     global cnt
     header = ser.read(1)
     if header == b'\xfd':
-        d_len = ser.read(1)
-        if len(d_len) == 1:
-            d_len = unpack("<B", d_len)[0]
+        by_len = ser.read(1)
+        if len(by_len) == 1:
+            d_len = unpack("<B", by_len)[0]
             syc_payload = ser.read(d_len+10)
             if len(syc_payload) == d_len+10:
                 msg_id = unpack("<H", syc_payload[5:7])[0]
@@ -39,6 +39,19 @@ def get_serial_str(ser):
                     print("payload:",payload)
                     cnt += 1
                     print("cnt:{}".format(cnt))
+                    head_payload_data = header+by_len+syc_payload
+                    print(head_payload_data)
+                elif msg_id == 3001:
+                    can_id = unpack("<I", syc_payload[9:13])[0]
+                    print("can_id:{}".format(hex(can_id)))
+                    payload = unpack("<BBBBBBBB", syc_payload[13:21])
+                    print("payload:",payload)
+                    cnt += 1
+                    print("cnt:{}".format(cnt))
+                    head_payload_data = header+by_len+syc_payload
+                    print(head_payload_data)
+
+
 
     
 if __name__ == "__main__":
