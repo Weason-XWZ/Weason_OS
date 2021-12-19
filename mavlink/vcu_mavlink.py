@@ -19,7 +19,7 @@ def serial_write_init():
     ser = Serial(args.port, baudrate=args.baudrate, timeout=3)
     return ser,s
 
-def get_serial_str(ser):
+def get_serial_str_cndid_payload(ser):
     global cnt
     header = ser.read(1)
     if header == b'\xfd':
@@ -49,6 +49,21 @@ def get_serial_str(ser):
                     head_payload_data = header+by_len+syc_payload
                     print(head_payload_data)
 
+def get_serial_mavlink(ser):
+    global cnt
+    header = ser.read(1)
+    if header == b'\xfd':
+        by_len = ser.read(1)
+        if len(by_len) == 1:
+            d_len = unpack("<B", by_len)[0]
+            syc_payload = ser.read(d_len+10)
+            if len(syc_payload) == d_len+10:
+                msg_id = unpack("<H", syc_payload[5:7])[0]
+                paload = syc_payload[10:]
+                print("msg_id:{}".format(msg_id))
+                print(paload)
+
+
 buf_heard = [0xfd]
 buf_len = [0x0c]
 hx_mavlink_sys5 = [0x00,0x01,0x02,0x03,0x04]
@@ -75,5 +90,5 @@ if __name__ == "__main__":
         pack_raw = b'\xfd\x0c\x00\x00*\x01\x01\xb9\x0b\x00(!d\x0c\x01\x02\x03\x04\x05\x06\x07\x08\xc5\xd4'
         ser.write(pack_raw)
         sleep(0.01)
-        get_serial_str(ser)
+        get_serial_mavlink(ser)
 

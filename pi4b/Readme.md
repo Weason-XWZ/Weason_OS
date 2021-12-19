@@ -45,3 +45,41 @@ rood:123qwe
 `sudo snap install gitkraken --classic`
 
 ![](image/Readme/1637314500111.png)
+
+#### 接入usb查询
+
+`lsusb`
+
+![](image/Readme/1639655054325.png)
+
+#### 配置界面
+
+`sudo raspi-config`
+
+![](image/Readme/1639660527355.png)
+
+#### USB摄像头接入
+
+1.查看接入的端口
+
+![](image/Readme/1639655054325.png)
+
+2.查看设备的端口
+
+![](image/Readme/1639656093558.png)
+
+3.使用 `fswebcam`命令抓图片
+
+`sudo apt-get install fswebcam`
+
+`fswebcam /dev/video0 ~/image.jpg`
+
+`fswebcam --no-banner -r 640x480 image3.jpg`
+
+4.使用视频
+
+#### 授权编辑文件
+
+sudo chmod 777 文件夹名字
+
+`sudo chmod 777 motion.conf `
